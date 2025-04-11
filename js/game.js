@@ -55,7 +55,13 @@ function generatePlatform() {
         newY = canvas.height - Math.random() * 300 - 50;
     } while (Math.abs(newY - lastPlatform.y) < 80);
 
-    let newPlatform = { x: newX, y: newY, width: 150, height: 20 };
+    let newPlatform = { 
+        x: newX, 
+        y: newY, 
+        width: 150, 
+        height: 20, 
+        sprite: sprites.platform // Use the platform image
+    };
     platforms.push(newPlatform);
 
     if (Math.random() > 0.5) {
@@ -67,7 +73,7 @@ for (let i = 0; i < 5; i++) {
     generatePlatform();
 }
 
-// Object to store all prite images
+// Object to store all sprite images
 const sprites = {
     player: new Image(),
     platform: new Image(),
@@ -85,16 +91,16 @@ sprites.background.src ='../assets/background.png';
 let imagesLoaded = 0;
 const totalImages = Object.keys(sprites).length;
 
-// function to handel image loading
+// function to handle image loading
 function onImageLoad(){
     imagesLoaded++;
-    // start the game loop only when allimages are loaded
+    // start the game loop only when all images are loaded
     if(imagesLoaded === totalImages){
         gameLoop();
     }
 }
 
-// add load event liceners to each image
+// add load event listeners to each image
 for(let key in sprites){
     sprites[key].addEventListener('load', onImageLoad);
     sprites[key].addEventListener('error', 
@@ -106,24 +112,34 @@ for(let key in sprites){
 }
 
 function gameLoop() {
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw the background image
+    ctx.drawImage(sprites.background, 0, 0, canvas.width, canvas.height);
+
+    // Move platforms and collectibles
     platforms.forEach(p => p.x -= gameSpeed);
-    
     collectibles.forEach(c => c.x -= gameSpeed);
 
+    // Remove off-screen platforms and collectibles
     platforms = platforms.filter(p => p.x + p.width > 0);
     collectibles = collectibles.filter(c => c.x > 0);
 
+    // Generate new platforms if needed
     if (platforms[platforms.length - 1].x < canvas.width - 200) {
         generatePlatform();
     }
 
-    ground.draw(ctx);
+    // Draw the ground using the ground sprite
+    ctx.drawImage(sprites.ground, ground.x, ground.y, ground.width, ground.height);
 
-    ctx.fillStyle = 'brown';
-    platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+    // Draw platforms using the platform sprite
+    platforms.forEach(p => {
+        ctx.drawImage(p.sprite, p.x, p.y, p.width, p.height);
+    });
 
+    // Draw collectibles
     collectibles.forEach(c => {
         if (c.checkCollision(player)) {
             score += 10;
@@ -131,13 +147,13 @@ function gameLoop() {
         c.draw(ctx, sprites);
     });
 
-    // Update the player with the new update method
+    // Update and draw the player
     player.update(canvas, platforms, keys);
     player.draw(ctx, sprites);
 
+    // Update the score display
     scoreDisplay.textContent = `Score: ${score}`;
 
+    // Request the next frame
     requestAnimationFrame(gameLoop);
 }
-
-// gameLoop();
